@@ -7,3 +7,9 @@ const getDependencies = require('get-dependencies');
 
 const db = require('./db');
 db.init();
+
+(async () => {
+
+
+    
+})();
