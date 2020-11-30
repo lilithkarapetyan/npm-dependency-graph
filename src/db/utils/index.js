@@ -1,9 +1,13 @@
 const get  = require('./get');
-const create  = require('./create');
+const getById  = require('./getById');
 const connect  = require('./connect');
+const createRel  = require('./createRel');
+const createNode  = require('./createNode');
 
 module.exports = {
     get, 
-    create,
+    getById,
     connect,
+    createRel,
+    createNode,
 };

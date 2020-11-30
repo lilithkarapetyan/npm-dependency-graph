@@ -7,11 +7,20 @@ const init = (db) => {
             type: 'string',
             index: true,
         },
-        repo: 'string',
+        repo: {
+            type: 'string',
+            required: false,
+        },
         created_at: 'date',
         last_updated_at: 'date',
-        lastest_version: 'string',
-        keywords: 'string', // ;-separated, uppercase strings
+        lastest_version: {
+            type: 'string',
+            required: false,
+        },
+        _keywords: {
+            type: 'string',
+            required: false,
+        }, // ;-separated, uppercase strings
     });
 };
 

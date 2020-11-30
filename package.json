@@ -4,9 +4,8 @@
   "description": "The app is a scraper for constructing the dependency graph of the Node Package Manager. ",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "start:dev": "nodemon src/index.js",
-    "lint": "./node_modules/.bin/eslint",
+    "start:nodes": "node src/nodes.js",
+    "start:rels": "node src/relations.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,7 +24,6 @@
   },
   "homepage": "https://github.com/lilithkarapetyan/npm-dependency-graph#readme",
   "dependencies": {
-    "all-the-package-names": "^1.3905.0",
     "axios": "^0.21.0",
     "dotenv": "^8.2.0",
     "get-dependencies": "^1.1.0",
