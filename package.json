@@ -27,6 +27,7 @@
     "axios": "^0.21.0",
     "dotenv": "^8.2.0",
     "get-dependencies": "^1.1.0",
+    "mongoose": "^5.11.0",
     "neode": "^0.4.6"
   },
   "devDependencies": {}

@@ -6,9 +6,13 @@ const types = require('./db/models/types');
 
 const { createNode } = require('./db/utils');
 const { getNames, getPackageInfo } = require('./utils/fetch');
+const { init: initLogger, LogModel, ErrorModel } = require('./logger');
+
 db.init();
+initLogger();
 
 (async () => {
+
     const [start, end, step] = process.argv.slice(2);
     const limit = +step;
     const maxCount = (+end) - (+start);
@@ -20,7 +24,6 @@ db.init();
 
     let successCount = 0;
     let failedCount = 0;
-    const errors = [];
 
     console.log(`Started at ${Date.now()}`);
     while (--maxIterations) {
@@ -32,7 +35,7 @@ db.init();
             const packagesNames = packagesData.rows.map(pckg => pckg.id);
 
             for (let packageName of packagesNames) {
-                try{
+                try {
                     const package = await getPackageInfo(packageName);
                     const {
                         name,
@@ -43,8 +46,8 @@ db.init();
                     } = package;
                     const latest = minMax(Object.keys(versions))[1];
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
-                    
-                    if(!repository || !repository.url) continue;
+
+                    if (!repository || !repository.url) continue;
 
                     await createNode(types.PACKAGE, {
                         name,
@@ -56,20 +59,34 @@ db.init();
                     });
                     successCount++;
                 }
-                catch(e){
-                    errors.push(e);
-                    console.log(e);
+                catch (e) {
                     failedCount++;
+                    ErrorModel.create({
+                        type: 'node',
+                        processId: skip + maxCount,
+                        error: e,
+                    });
                 }
             }
             skip += limit;
         }
         catch (e) {
-            errors.push(e);
-            console.log(e);
+            failedCount += limit;
+            ErrorModel.create({
+                type: 'node',
+                processId: skip + maxCount,
+                error: e,
+            });
         }
+
+        LogModel.create({
+            successCount,
+            failedCount,
+            memory: process.memoryUsage().heapUsed / 1024 / 1024,
+            processId: skip + maxCount,
+            type: 'node'
+        });
     }
 
     console.log(`Finished at ${Date.now()}`);
-    console.log(errors);
 })();

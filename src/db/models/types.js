@@ -1,6 +1,6 @@
 const types = {
-    PACKAGE: 'Package',
-    DEPENDENT_ON: 'Dependent_on',
+    PACKAGE: 'PACKAGE',
+    DEPENDENT_ON: 'DEPENDS_ON',
 };
 
 module.exports = types;
