@@ -26,7 +26,8 @@ initLogger();
     let failedCount = 0;
 
     console.log(`Started at ${Date.now()}`);
-    while (--maxIterations) {
+    for(let i = 0; i < maxIterations; i++){
+        console.time(`Started Chunk: ${i*limit}-${(i+1)*limit} PID: ${skip+limit}`);
         try {
             const packagesData = await getNames({
                 limit,
@@ -48,7 +49,7 @@ initLogger();
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
 
                     if (!repository || !repository.url) continue;
-
+                    console.time(`Inserted ${name}`);
                     await createNode(types.PACKAGE, {
                         name,
                         repo: repository && repository.url,
@@ -57,14 +58,18 @@ initLogger();
                         lastest_version: latest,
                         keywords: joinedKeywords,
                     });
+                    console.timeEnd(`Inserted ${name}`);
                     successCount++;
                 }
                 catch (e) {
                     failedCount++;
+                    console.log(e)
                     ErrorModel.create({
                         type: 'node',
+                        package: packageName,
                         processId: skip + maxCount,
-                        error: e,
+                        message: e.message,
+                        stack: e.stack,
                     });
                 }
             }
@@ -72,16 +77,21 @@ initLogger();
         }
         catch (e) {
             failedCount += limit;
+            console.log(e)
             ErrorModel.create({
                 type: 'node',
+                chunk: i*limit,
                 processId: skip + maxCount,
-                error: e,
+                message: e.message,
+                stack: e.stack,
             });
         }
-
+        
+        console.timeEnd(`Started Chunk: ${i*limit}-${(i+1)*limit} PID: ${skip}`);
         LogModel.create({
             successCount,
             failedCount,
+            chunk: i*limit,
             memory: process.memoryUsage().heapUsed / 1024 / 1024,
             processId: skip + maxCount,
             type: 'node'
