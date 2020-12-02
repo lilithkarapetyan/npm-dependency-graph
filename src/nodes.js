@@ -61,6 +61,7 @@ initLogger();
                 }
                 catch (e) {
                     failedCount++;
+                    console.log(e)
                     ErrorModel.create({
                         type: 'node',
                         package: packageName,
@@ -74,6 +75,7 @@ initLogger();
         }
         catch (e) {
             failedCount += limit;
+            console.log(e)
             ErrorModel.create({
                 type: 'node',
                 chunk: i*limit,
