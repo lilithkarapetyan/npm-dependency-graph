@@ -18,7 +18,6 @@ initLogger();
     const maxCount = (+end) - (+start);
 
     let skip = +start;
-    console.log(limit, maxCount, skip)
 
     let maxIterations = Math.floor(maxCount / limit) + 1;
 
@@ -61,7 +60,6 @@ initLogger();
                 }
                 catch (e) {
                     failedCount++;
-                    console.log(e)
                     ErrorModel.create({
                         type: 'node',
                         package: packageName,
@@ -75,7 +73,6 @@ initLogger();
         }
         catch (e) {
             failedCount += limit;
-            console.log(e)
             ErrorModel.create({
                 type: 'node',
                 chunk: i*limit,
