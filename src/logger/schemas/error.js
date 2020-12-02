@@ -7,6 +7,9 @@ const ErrorSchema = new Schema({
         type: String,
         enum: ['rel', 'node'],
     },
+    chunk: Number,
+    message: String,
+    stack: String,
 }, { timestamps: { createdAt: 'createdAt' } });
 
 module.exports = ErrorSchema;

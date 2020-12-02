@@ -5,6 +5,7 @@ const LogSchema = new Schema({
     failedCount: Number,
     memory : Number, //in mb
     processId: Number,
+    chunk: Number,
     type: {
         type: String,
         enum: ['rel', 'node'],
