@@ -49,7 +49,6 @@ initLogger();
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
 
                     if (!repository || !repository.url) continue;
-                    console.time(`Inserted ${name}`);
                     await createNode(types.PACKAGE, {
                         name,
                         repo: repository && repository.url,
@@ -58,7 +57,6 @@ initLogger();
                         lastest_version: latest,
                         keywords: joinedKeywords,
                     });
-                    console.timeEnd(`Inserted ${name}`);
                     successCount++;
                 }
                 catch (e) {
@@ -99,4 +97,5 @@ initLogger();
     }
 
     console.log(`Finished at ${Date.now()}`);
+    process.exit(0);
 })();
