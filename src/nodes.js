@@ -18,16 +18,15 @@ initLogger();
     const maxCount = (+end) - (+start);
 
     let skip = +start;
-    console.log(limit, maxCount, skip)
 
-    let maxIterations = Math.floor(maxCount / limit) + 1;
+    let maxIterations = Math.floor(maxCount / limit);
 
     let successCount = 0;
     let failedCount = 0;
 
     console.log(`Started at ${Date.now()}`);
     for(let i = 0; i < maxIterations; i++){
-        console.time(`Started Chunk: ${i*limit}-${(i+1)*limit} PID: ${skip+limit}`);
+        console.time(`Started Chunk: ${i*limit}-${(i+1)*limit}`);
         try {
             const packagesData = await getNames({
                 limit,
@@ -38,13 +37,16 @@ initLogger();
             for (let packageName of packagesNames) {
                 try {
                     const package = await getPackageInfo(packageName);
+                    if(!package) continue;
                     const {
                         name,
                         versions,
                         repository,
-                        time: { created, modified, },
                         keywords
                     } = package;
+                    const created = package.time && package.time.created || undefined;
+                    const modified = package.time && package.time.modified || undefined;
+
                     const latest = minMax(Object.keys(versions))[1];
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
 
@@ -61,7 +63,6 @@ initLogger();
                 }
                 catch (e) {
                     failedCount++;
-                    console.log(e)
                     ErrorModel.create({
                         type: 'node',
                         package: packageName,
@@ -75,7 +76,6 @@ initLogger();
         }
         catch (e) {
             failedCount += limit;
-            console.log(e)
             ErrorModel.create({
                 type: 'node',
                 chunk: i*limit,
@@ -85,7 +85,7 @@ initLogger();
             });
         }
         
-        console.timeEnd(`Started Chunk: ${i*limit}-${(i+1)*limit} PID: ${skip}`);
+        console.timeEnd(`Started Chunk: ${i*limit}-${(i+1)*limit}`);
         LogModel.create({
             successCount,
             failedCount,
