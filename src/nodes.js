@@ -97,6 +97,7 @@ initLogger();
         LogModel.create({
             successCount,
             failedCount,
+            invalidCount,
             chunk: i*limit,
             memory: process.memoryUsage().heapUsed / 1024 / 1024,
             processId: skip + maxCount,

@@ -3,6 +3,7 @@ const { Schema } = require('mongoose');
 const LogSchema = new Schema({
     successCount: Number,
     failedCount: Number,
+    invalidCount: Number,
     memory : Number, //in mb
     processId: Number,
     chunk: Number,
