@@ -23,6 +23,7 @@ initLogger();
 
     let successCount = 0;
     let failedCount = 0;
+    let invalidCount = 0;
 
     console.log(`Started at ${Date.now()}`);
     for(let i = 0; i < maxIterations; i++){
@@ -33,11 +34,15 @@ initLogger();
                 skip,
             });
             const packagesNames = packagesData.rows.map(pckg => pckg.id);
+            console.log(`Got ${packagesNames.length} packages`);
 
             for (let packageName of packagesNames) {
                 try {
                     const package = await getPackageInfo(packageName);
-                    if(!package) continue;
+                    if(!package){
+                        invalidCount++;
+                        continue;
+                    }
                     const {
                         name,
                         versions,
@@ -47,10 +52,13 @@ initLogger();
                     const created = package.time && package.time.created || undefined;
                     const modified = package.time && package.time.modified || undefined;
 
-                    const latest = minMax(Object.keys(versions))[1];
+                    const latest = minMax(Object.keys(versions || {}))[1] || undefined;
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
 
-                    if (!repository || !repository.url) continue;
+                    if (!repository || !repository.url){
+                        invalidCount++;
+                        continue;
+                    }
                     await createNode(types.PACKAGE, {
                         name,
                         repo: repository && repository.url,
