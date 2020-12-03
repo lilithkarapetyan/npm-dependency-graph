@@ -26,8 +26,8 @@ initLogger();
     let invalidCount = 0;
 
     console.log(`Started at ${Date.now()}`);
-    for(let i = 0; i < maxIterations; i++){
-        console.time(`Started Chunk: ${i*limit}-${(i+1)*limit}`);
+    for (let i = 0; i < maxIterations; i++) {
+        console.time(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         try {
             const packagesData = await getNames({
                 limit,
@@ -38,21 +38,20 @@ initLogger();
 
             for (let packageName of packagesNames) {
                 try {
-                    const package = await getPackageInfo(packageName);
-                    if(!package){
-                        invalidCount++;
-                        continue;
+                    let package = await getPackageInfo(packageName);
+                    if (!package) {
+                        package = { name: packageName }
                     }
                     const {
-                        name,
-                        versions,
-                        repository,
-                        keywords
+                        name = '',
+                        versions = {},
+                        repository = '',
+                        keywords = [],
                     } = package;
-                    const created = package.time && package.time.created || undefined;
-                    const modified = package.time && package.time.modified || undefined;
+                    const created = package.time && package.time.created;
+                    const modified = package.time && package.time.modified;
 
-                    const latest = minMax(Object.keys(versions || {}))[1] || undefined;
+                    const latest = minMax(Object.keys(versions || {}))[1];
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
 
                     // if (!repository || !repository.url){
@@ -62,10 +61,10 @@ initLogger();
                     await createNode(types.PACKAGE, {
                         name,
                         repo: repository && repository.url || undefined,
-                        created_at: created,
-                        last_updated_at: modified,
-                        lastest_version: latest,
-                        keywords: joinedKeywords,
+                        created_at: created || undefined,
+                        last_updated_at: modified || undefined,
+                        lastest_version: latest || undefined,
+                        keywords: joinedKeywords || undefined,
                     });
                     successCount++;
                 }
@@ -86,19 +85,19 @@ initLogger();
             failedCount += limit;
             ErrorModel.create({
                 type: 'node',
-                chunk: i*limit,
+                chunk: i * limit,
                 processId: skip + maxCount,
                 message: e.message,
                 stack: e.stack,
             });
         }
-        
-        console.timeEnd(`Started Chunk: ${i*limit}-${(i+1)*limit}`);
+
+        console.timeEnd(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         LogModel.create({
             successCount,
             failedCount,
             invalidCount,
-            chunk: i*limit,
+            chunk: i * limit,
             memory: process.memoryUsage().heapUsed / 1024 / 1024,
             processId: skip + maxCount,
             type: 'node'
