@@ -55,13 +55,13 @@ initLogger();
                     const latest = minMax(Object.keys(versions || {}))[1] || undefined;
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
 
-                    if (!repository || !repository.url){
-                        invalidCount++;
-                        continue;
-                    }
+                    // if (!repository || !repository.url){
+                    //     invalidCount++;
+                    //     continue;
+                    // }
                     await createNode(types.PACKAGE, {
                         name,
-                        repo: repository && repository.url,
+                        repo: repository && repository.url || undefined,
                         created_at: created,
                         last_updated_at: modified,
                         lastest_version: latest,
