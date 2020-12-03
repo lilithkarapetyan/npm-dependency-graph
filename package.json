@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/lilithkarapetyan/npm-dependency-graph#readme",
   "dependencies": {
+    "all-the-package-names": "^1.3905.0",
     "axios": "^0.21.0",
     "dotenv": "^8.2.0",
     "get-dependencies": "^1.1.0",

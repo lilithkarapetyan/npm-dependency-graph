@@ -3,6 +3,7 @@ require('dotenv').config();
 const db = require('./db');
 const minMax = require('./utils/minMax');
 const types = require('./db/models/types');
+const allPackageNames = require('all-the-package-names');
 
 const { createNode } = require('./db/utils');
 const { getNames, getPackageInfo } = require('./utils/fetch');
@@ -10,6 +11,7 @@ const { init: initLogger, LogModel, ErrorModel } = require('./logger');
 
 db.init();
 initLogger();
+
 
 (async () => {
 
@@ -29,11 +31,12 @@ initLogger();
     for (let i = 0; i < maxIterations; i++) {
         console.time(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         try {
-            const packagesData = await getNames({
-                limit,
-                skip,
-            });
-            const packagesNames = packagesData.rows.map(pckg => pckg.id);
+            // const packagesData = await getNames({
+            //     limit,
+            //     skip,
+            // });
+            const packagesNames = allPackageNames.slice(skip, skip+limit);
+            // packagesData.rows.map(pckg => pckg.id);
             console.log(`Got ${packagesNames.length} packages`);
 
             for (let packageName of packagesNames) {
