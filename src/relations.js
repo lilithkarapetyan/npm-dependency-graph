@@ -66,7 +66,7 @@ initLogger();
                                 processId: skip + maxCount,
                                 package: dep,
                                 message: e.message,
-                                stack: stack,
+                                stack: e.stack,
                             });
                         }
                     }
@@ -77,7 +77,7 @@ initLogger();
                         processId: skip + maxCount,
                         package: package.name,
                         message: e.message,
-                        stack: stack
+                        stack: e.stack
                     });
                 }
             }
@@ -89,7 +89,7 @@ initLogger();
                 type: 'rel',
                 processId: skip + maxCount,
                 message: e.message,
-                stack: stack
+                stack: e.stack
             });
         }
 
