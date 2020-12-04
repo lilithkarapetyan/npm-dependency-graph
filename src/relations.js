@@ -105,4 +105,5 @@ initLogger();
         });
     }
     console.log(`Finished at ${Date.now()}`);
+    process.exit(0);
 })();
