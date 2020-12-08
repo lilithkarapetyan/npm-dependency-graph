@@ -3,6 +3,7 @@ require('dotenv').config();
 const db = require('./db');
 const minMax = require('./utils/minMax');
 const types = require('./db/models/types');
+const allPackageNames = require('all-the-package-names');
 
 const { createNode } = require('./db/utils');
 const { getNames, getPackageInfo } = require('./utils/fetch');
@@ -10,6 +11,7 @@ const { init: initLogger, LogModel, ErrorModel } = require('./logger');
 
 db.init();
 initLogger();
+
 
 (async () => {
 
@@ -23,41 +25,49 @@ initLogger();
 
     let successCount = 0;
     let failedCount = 0;
+    let invalidCount = 0;
 
     console.log(`Started at ${Date.now()}`);
-    for(let i = 0; i < maxIterations; i++){
-        console.time(`Started Chunk: ${i*limit}-${(i+1)*limit}`);
+    for (let i = 0; i < maxIterations; i++) {
+        console.time(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         try {
-            const packagesData = await getNames({
-                limit,
-                skip,
-            });
-            const packagesNames = packagesData.rows.map(pckg => pckg.id);
+            // const packagesData = await getNames({
+            //     limit,
+            //     skip,
+            // });
+            const packagesNames = allPackageNames.slice(skip, skip+limit);
+            // packagesData.rows.map(pckg => pckg.id);
+            console.log(`Got ${packagesNames.length} packages`);
 
             for (let packageName of packagesNames) {
                 try {
-                    const package = await getPackageInfo(packageName);
-                    if(!package) continue;
+                    let package = await getPackageInfo(packageName);
+                    if (!package) {
+                        package = { name: packageName }
+                    }
                     const {
-                        name,
-                        versions,
-                        repository,
-                        keywords
+                        name = '',
+                        versions = {},
+                        repository = '',
+                        keywords = [],
                     } = package;
-                    const created = package.time && package.time.created || undefined;
-                    const modified = package.time && package.time.modified || undefined;
+                    const created = package.time && package.time.created;
+                    const modified = package.time && package.time.modified;
 
-                    const latest = minMax(Object.keys(versions))[1];
+                    const latest = minMax(Object.keys(versions || {}))[1];
                     const joinedKeywords = keywords && keywords.length ? keywords.join(';').toUpperCase() : undefined;
 
-                    if (!repository || !repository.url) continue;
+                    // if (!repository || !repository.url){
+                    //     invalidCount++;
+                    //     continue;
+                    // }
                     await createNode(types.PACKAGE, {
                         name,
-                        repo: repository && repository.url,
-                        created_at: created,
-                        last_updated_at: modified,
-                        lastest_version: latest,
-                        keywords: joinedKeywords,
+                        repo: repository && repository.url || undefined,
+                        created_at: created || undefined,
+                        last_updated_at: modified || undefined,
+                        lastest_version: latest || undefined,
+                        keywords: joinedKeywords || undefined,
                     });
                     successCount++;
                 }
@@ -78,18 +88,19 @@ initLogger();
             failedCount += limit;
             ErrorModel.create({
                 type: 'node',
-                chunk: i*limit,
+                chunk: i * limit,
                 processId: skip + maxCount,
                 message: e.message,
                 stack: e.stack,
             });
         }
-        
-        console.timeEnd(`Started Chunk: ${i*limit}-${(i+1)*limit}`);
+
+        console.timeEnd(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         LogModel.create({
             successCount,
             failedCount,
-            chunk: i*limit,
+            invalidCount,
+            chunk: i * limit,
             memory: process.memoryUsage().heapUsed / 1024 / 1024,
             processId: skip + maxCount,
             type: 'node'

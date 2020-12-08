@@ -19,10 +19,12 @@ initLogger();
 
     let successCount = 0;
     let failedCount = 0;
+    let invalidCount = 0;
 
-    let maxIterations = Math.floor(maxCount / limit) + 1;
+    let maxIterations = Math.floor(maxCount / limit);
     console.log(`Started at ${Date.now()}`);
-    while (--maxIterations) {
+    for(let i = 0; i < maxIterations; i++) {
+        console.time(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         try {
             skip += limit;
             const nodes = await getById({
@@ -35,11 +37,17 @@ initLogger();
                 record._fields.length &&
                 record._fields[0].properties);
 
-            if (!items) continue;
+            if (!items) {
+                invalidCount++;
+                continue;
+            }
 
             for (let package of items) {
                 try {
-                    if (!package || !package.repo) continue;
+                    if (!package || !package.repo) {
+                        invalidCount++;
+                        continue;
+                    }
                     let name = (package.repo.match(GITHUB_NAME_REGEXP) || [])[0];
                     if (!name) continue;
                     const index = name.lastIndexOf('.');
@@ -47,10 +55,20 @@ initLogger();
                     const deps = await getDependencies.getByUrl(GITHUB_PACKAGE_JSON(name))
                     successCount++;
                     for (let dep of deps) {
-                        await createRel({
-                            package1: package.name,
-                            package2: dep,
-                        });
+                        try {
+                            await createRel({
+                                package1: package.name,
+                                package2: dep,
+                            });
+                        } catch (e) {
+                            ErrorModel.create({
+                                type: 'rel',
+                                processId: skip + maxCount,
+                                package: dep,
+                                message: e.message,
+                                stack: e.stack,
+                            });
+                        }
                     }
                 } catch (e) {
                     failedCount++;
@@ -58,7 +76,8 @@ initLogger();
                         type: 'rel',
                         processId: skip + maxCount,
                         package: package.name,
-                        error: e,
+                        message: e.message,
+                        stack: e.stack
                     });
                 }
             }
@@ -69,17 +88,22 @@ initLogger();
             ErrorModel.create({
                 type: 'rel',
                 processId: skip + maxCount,
-                error: e,
+                message: e.message,
+                stack: e.stack
             });
         }
 
+        console.timeEnd(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         LogModel.create({
             successCount,
             failedCount,
+            invalidCount,
+            chunk: i * limit,
             memory: process.memoryUsage().heapUsed / 1024 / 1024,
             processId: skip + maxCount,
             type: 'rel'
         });
     }
     console.log(`Finished at ${Date.now()}`);
+    process.exit(0);
 })();
