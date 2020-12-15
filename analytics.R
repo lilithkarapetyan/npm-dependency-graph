@@ -1,7 +1,7 @@
 library(poweRlaw)
 
-names_rels_in <- data.frame(read.csv('/Users/lilitkarapetyan/Desktop/random/npm-dependency-graph/data/rel_in_count.csv'))
-names_rels_out <- data.frame(read.csv('/Users/lilitkarapetyan/Desktop/random/npm-dependency-graph/data/rel_out_count.csv'))
+names_rels_in <- data.frame(read.csv('./data/rel_in_count.csv'))
+names_rels_out <- data.frame(read.csv('./data/rel_out_count.csv'))
 
 rel_in_counts <- names_rels_in$rel_count
 rel_out_counts <- names_rels_out$count.r.
