@@ -3,11 +3,10 @@ require('dotenv').config();
 const getDependencies = require('get-dependencies');
 
 const db = require('./db');
-const { createRel, getById } = require('./db/utils');
+const { createRels, getById } = require('./db/utils');
 const { init: initLogger, LogModel, ErrorModel } = require('./logger');
 const { GITHUB_PACKAGE_JSON, GITHUB_NAME_REGEXP } = require('./utils/constants');
 
-db.init();
 initLogger();
 
 (async () => {
@@ -23,20 +22,14 @@ initLogger();
 
     let maxIterations = Math.floor(maxCount / limit);
     console.log(`Started at ${Date.now()}`);
-    for(let i = 0; i < maxIterations; i++) {
+    for (let i = 0; i < maxIterations; i++) {
         console.time(`Started Chunk: ${i * limit}-${(i + 1) * limit}`);
         try {
             skip += limit;
-            const nodes = await getById({
+            const items = await getById({
                 skip,
                 limit,
             });
-
-            const items = nodes && nodes.records.map(record => record &&
-                record._fields &&
-                record._fields.length &&
-                record._fields[0].properties);
-
             if (!items) {
                 invalidCount++;
                 continue;
@@ -52,25 +45,33 @@ initLogger();
                     if (!name) continue;
                     const index = name.lastIndexOf('.');
                     name = name.substring(0, index);
-                    const deps = await getDependencies.getByUrl(GITHUB_PACKAGE_JSON(name))
+                    console.log(name)
+                    const githubName = GITHUB_PACKAGE_JSON(name).split('//')[1];
+                    const deps = await getDependencies.getByUrl(githubName)
                     successCount++;
-                    for (let dep of deps) {
-                        try {
-                            await createRel({
-                                package1: package.name,
-                                package2: dep,
-                            });
-                        } catch (e) {
-                            ErrorModel.create({
-                                type: 'rel',
-                                processId: skip + maxCount,
-                                package: dep,
-                                message: e.message,
-                                stack: e.stack,
-                            });
-                        }
+
+                    try {
+                        console.time(`inserting ${deps} to ${package.name}`);
+                        await createRels({
+                            package: package.name,
+                            packageDeps: deps,
+                        });
+                        console.timeEnd(`inserting ${deps} to ${package.name}`);
+
+                    } catch (e) {
+                        console.log(60, e)
+                        break
+                        ErrorModel.create({
+                            type: 'rel',
+                            processId: skip + maxCount,
+                            package: dep,
+                            message: e.message,
+                            stack: e.stack,
+                        });
                     }
                 } catch (e) {
+                    console.log(71, e)
+                    break
                     failedCount++;
                     ErrorModel.create({
                         type: 'rel',
@@ -81,9 +82,11 @@ initLogger();
                     });
                 }
             }
-
+            
         }
         catch (e) {
+            console.log(86, e)
+            break
             failedCount += limit;
             ErrorModel.create({
                 type: 'rel',

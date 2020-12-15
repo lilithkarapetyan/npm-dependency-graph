@@ -29,6 +29,7 @@
     "dotenv": "^8.2.0",
     "get-dependencies": "^1.1.0",
     "mongoose": "^5.11.0",
+    "neo4j-driver": "^4.2.1",
     "neode": "^0.4.6"
   },
   "devDependencies": {}
